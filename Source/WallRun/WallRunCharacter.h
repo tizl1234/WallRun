@@ -8,6 +8,14 @@
 
 class UInputComponent;
 
+UENUM()
+enum class EWallRunSide : uint8
+{	
+	None,
+	Left,
+	Right
+};
+
 UCLASS(config=Game)
 class AWallRunCharacter : public ACharacter
 {
@@ -89,6 +97,11 @@ public:
 	FORCEINLINE class USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 	/** Returns FirstPersonCameraComponent subobject **/
 	FORCEINLINE class UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
+private:
+	UFUNCTION()
+	void OnPlayerCapsuleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+	UFUNCTION()
+	bool IsSurfaceWallRunable(FVector& SurfaceNormal);
 };
 
