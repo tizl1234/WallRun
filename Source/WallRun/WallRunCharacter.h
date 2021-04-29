@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Components/TimelineComponent.h"
 #include "WallRunCharacter.generated.h"
 
 class UInputComponent;
@@ -38,6 +39,10 @@ class AWallRunCharacter : public ACharacter
 	class UCameraComponent* FirstPersonCameraComponent;
 public:
 	AWallRunCharacter();
+
+	virtual void Tick(float DeltaSeconds) override;
+
+	virtual void Jump() override;
 
 protected:
 	virtual void BeginPlay();
@@ -87,7 +92,15 @@ protected:
 	 * Called via input to turn look up/down at a given rate.
 	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
 	 */
-	void LookUpAtRate(float Rate);	
+	void LookUpAtRate(float Rate);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Wall Run", meta = (UIMin = 0.f, ClampMin = 0.f))
+	float MaxWallRunTime = 1.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Wall Run")
+	UCurveFloat* CameraTiltCurve;
+
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
@@ -101,7 +114,34 @@ private:
 	UFUNCTION()
 	void OnPlayerCapsuleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+	void GetWallRunSideAndDirection(FVector& HitNormal, EWallRunSide& Side, FVector& Direction);
+
 	UFUNCTION()
 	bool IsSurfaceWallRunable(FVector& SurfaceNormal);
+
+	bool AreRequiredKeysDown(EWallRunSide Side);
+
+	float ForwardAxis = 0.f;
+
+	float RightAxis = 0.f;
+
+	void StartWallRun(EWallRunSide Side, FVector& Direction);
+	void UpdateWallRun();
+	void StopWallRun();
+
+	FORCEINLINE void BeginCameraTilt() { CameraTiltTimeline.Play(); }
+
+	UFUNCTION()
+	void UpdateCameraTilt(float Value);
+
+	FORCEINLINE void EndCameraTilt() { CameraTiltTimeline.Reverse(); }
+
+	bool bIsWallRunning = false;
+	EWallRunSide CurrentWallRunSide = EWallRunSide::None;
+	FVector CurrentWallRunDirection = FVector::ZeroVector;
+
+	FTimerHandle WallRunTimer;
+
+	FTimeline CameraTiltTimeline;
 };
 
